@@ -1,12 +1,11 @@
 package com.potujno_interpreter.potujno;
 
-import static com.potujno_interpreter.potujno.TokenType.*;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.potujno_interpreter.potujno.TokenType.*;
 
 public class Scanner {
     private final String source;
