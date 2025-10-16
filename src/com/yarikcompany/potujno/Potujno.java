@@ -14,6 +14,8 @@ public class Potujno {
     static boolean hadRuntimeError = false;
 
     public static void main(String[] args) throws IOException {
+        String cwd = System.getProperty("user.dir");
+        System.out.println("CWD: " + cwd);
         if (args.length > 1) {
             System.out.println("Usage: potujno [script]");
             System.exit(64);
@@ -50,11 +52,11 @@ public class Potujno {
         List<Token> tokens = scanner.scanTokens();
 
         Parser parser = new Parser(tokens);
-        Expr expression = parser.parse();
+        List<Stmt> statements = parser.parse();
 
         if (hadError) return;
 
-        interpreter.interpret(expression);
+        interpreter.interpret(statements);
     }
 
     static void error(int line, String message) {
