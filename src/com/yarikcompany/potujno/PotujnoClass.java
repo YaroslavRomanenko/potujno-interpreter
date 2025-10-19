@@ -5,16 +5,22 @@ import java.util.Map;
 
 public class PotujnoClass implements PotujnoCallable {
     final String name;
+    final PotujnoClass superclass;
     private final Map<String, PotujnoFunction> methods;
 
-    PotujnoClass(String name, Map<String, PotujnoFunction> methods) {
+    PotujnoClass(String name, PotujnoClass superclass, Map<String, PotujnoFunction> methods) {
         this.name = name;
+        this.superclass = superclass;
         this.methods = methods;
     }
 
     PotujnoFunction findMethod(String name) {
         if (methods.containsKey(name)) {
             return methods.get(name);
+        }
+
+        if (superclass != null) {
+            return superclass.findMethod(name);
         }
 
         return null;

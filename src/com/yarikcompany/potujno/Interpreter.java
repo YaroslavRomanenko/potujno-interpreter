@@ -68,6 +68,22 @@ public class Interpreter implements Expr.Visitor<Object>,
     }
 
     @Override
+    public Object visitSuperExpr(Expr.Super expr) {
+        int distance = locals.get(expr);
+        PotujnoClass superclass = (PotujnoClass)environment.getAt(distance, "super");
+
+        PotujnoInstance object = (PotujnoInstance)environment.getAt(distance - 1, "this");
+
+        PotujnoFunction method = superclass.findMethod(expr.method.lexeme);
+
+        if (method == null) {
+            throw new RuntimeError(expr.method, "Undefined property '" + expr.method.lexeme + "'.");
+        }
+
+        return method.bind(object);
+    }
+
+    @Override
     public Object visitThisExpr(Expr.This expr) {
         return lookUpVariable(expr.keyword, expr);
     }
@@ -252,7 +268,20 @@ public class Interpreter implements Expr.Visitor<Object>,
 
     @Override
     public Void visitClassStmt(Stmt.Class stmt) {
+        Object superclass = null;
+        if (stmt.superclass != null) {
+            superclass = evaluate(stmt.superclass);
+            if (!(superclass instanceof PotujnoClass)) {
+                throw new RuntimeError(stmt.superclass.name, "Superclass must be a class.");
+            }
+        }
+
         environment.define(stmt.name.lexeme, null);
+
+        if (stmt.superclass != null) {
+            environment = new Environment(environment);
+            environment.define("super", superclass);
+        }
 
         Map<String, PotujnoFunction> methods = new HashMap<>();
         for (Stmt.Function method : stmt.methods) {
@@ -260,7 +289,12 @@ public class Interpreter implements Expr.Visitor<Object>,
             methods.put(method.name.lexeme, function);
         }
 
-        PotujnoClass potujnoClass = new PotujnoClass(stmt.name.lexeme, methods);
+        PotujnoClass potujnoClass = new PotujnoClass(stmt.name.lexeme, (PotujnoClass)superclass, methods);
+
+        if (superclass != null) {
+            environment = environment.enclosing;
+        }
+
         environment.assign(stmt.name, potujnoClass);
         return null;
     }
