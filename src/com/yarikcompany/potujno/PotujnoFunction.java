@@ -5,10 +5,18 @@ import java.util.List;
 public class PotujnoFunction implements PotujnoCallable {
     private final Stmt.Function declaration;
     private final Environment closure;
+    private final boolean isInitializer;
 
-    PotujnoFunction(Stmt.Function declaration, Environment closure) {
+    PotujnoFunction(Stmt.Function declaration, Environment closure, boolean isInitializer) {
+        this.isInitializer = isInitializer;
         this.closure = closure;
         this.declaration = declaration;
+    }
+
+    PotujnoFunction bind(PotujnoInstance instance) {
+        Environment environment = new Environment(closure);
+        environment.define("this", instance);
+        return new PotujnoFunction(declaration, environment, isInitializer);
     }
 
     @Override
@@ -31,8 +39,12 @@ public class PotujnoFunction implements PotujnoCallable {
         try {
             interpreter.executeBlock(declaration.body, environment);
         } catch (Return returnValue) {
+            if (isInitializer) return closure.getAt(0, "this");
+
             return returnValue.value;
         }
+
+        if (isInitializer) return closure.getAt(0, "this");
 
         return null;
     }
